@@ -6,6 +6,7 @@
         "build": "tsc",
         "start": "node dist/index.js",
         "dev": "ts-node src/index.ts",
+        "check-wallet": "ts-node src/utils/checkWallet.ts",
         "lint": "eslint .",
         "lint:fix": "eslint --fix .",
         "format": "prettier --write .",

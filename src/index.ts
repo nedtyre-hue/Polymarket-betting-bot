@@ -4,6 +4,8 @@ import ora from 'ora';
 import TradeMonitor from './services/tradeMonitor';
 import tradeExecutor from './services/tradeExecutor';
 import { TradeParams } from './interfaces/tradeInterfaces';
+import { approveUSDC, checkUSDCAllowance } from './utils/helper';
+import { ENV } from './config/env';
 
 const promptUser = async (): Promise<TradeParams> => {
     const rl = readline.createInterface({
@@ -53,7 +55,15 @@ export const main = async () => {
     connectDBSpinner.succeed('Connected to MongoDB.\n');
 
     const params = await promptUser();
-    
+
+    console.log('Checking USDC allowance for CLOB contracts...')
+    for (const contractAddress of ENV.CLOB_CONTRACT_ADDRESSES) {
+        const allowance = await checkUSDCAllowance(ENV.PRIVATE_WALLET, contractAddress);
+        if (allowance === 0) {
+            const txHash = await approveUSDC(ENV.PRIVATE_KEY, contractAddress, 'max');
+        }
+    }
+
     const botStartSpinner = ora('Starting the bot...').start();
     const monitor = new TradeMonitor();
     monitor.on('transaction', (data) => {

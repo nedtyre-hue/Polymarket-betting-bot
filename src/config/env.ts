@@ -1,8 +1,8 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-if (!process.env.PROXY_WALLET) {
-    throw new Error('PROXY_WALLET is not defined');
+if (!process.env.PRIVATE_WALLET) {
+    throw new Error('PRIVATE_WALLET is not defined');
 }
 if (!process.env.PRIVATE_KEY) {
     throw new Error('PRIVATE_KEY is not defined');
@@ -35,11 +35,11 @@ export const ENV = {
     // - Must have USDC balance for trading
     // - Used by CLOB client to sign and place orders
     // - This wallet receives profits/losses from copied trades
-    PROXY_WALLET: process.env.PROXY_WALLET as string,
+    PRIVATE_WALLET: process.env.PRIVATE_WALLET as string,
     
-    // 🔐 PRIVATE KEY: Private key corresponding to PROXY_WALLET
+    // 🔐 PRIVATE KEY: Private key corresponding to PRIVATE_WALLET
     // - Used to sign transactions for your trading wallet
-    // - MUST match PROXY_WALLET address
+    // - MUST match PRIVATE_WALLET address
     // - ⚠️ KEEP SECRET - Never share or commit to version control
     PRIVATE_KEY: process.env.PRIVATE_KEY as string,
     
@@ -54,7 +54,13 @@ export const ENV = {
     // 📄 Smart Contract Addresses (Polygon Mainnet)
     USDC_CONTRACT_ADDRESS: process.env.USDC_CONTRACT_ADDRESS as string, // USDC token contract
     POLYMARKET_CONTRACT_ADDRESS: process.env.POLYMARKET_CONTRACT_ADDRESS as string, // Polymarket main contract
-    
+
+    CLOB_CONTRACT_ADDRESSES: [
+        '0x4bFb41d5B3570DeFd03C39a9A4D8dE6Bd8B8982E',
+        '0xC5d563A36AE78145C45a50134d48A1215220f80a',
+        '0xd91E80cF2E7be2e162c6513ceD06f1dD0dA35296'
+    ],
+
     // 💾 Database Connection
     MONGO_URI: process.env.MONGO_URI as string, // MongoDB connection string
 };

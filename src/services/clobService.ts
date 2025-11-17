@@ -2,7 +2,6 @@ import { ethers } from 'ethers';
 import { ApiKeyCreds, ApiKeysResponse, ClobClient, OpenOrder, OpenOrdersResponse, OrderScoring, OrderType } from '@polymarket/clob-client';
 import { ICanceledOrders, IPlacedOrderResponse } from '../interfaces/clobInterface';
 import { ENV } from '../config/env';
-import { getPolyMarketModel } from '../models/PolyMarket';
 import { SignatureType } from '@polymarket/order-utils';
 
 class ClobService {
@@ -27,54 +26,13 @@ class ClobService {
         const chainId = await wallet.getChainId();
         
         // Ensure wallet address is checksummed
-        const walletAddress = ethers.utils.getAddress(ENV.PROXY_WALLET);
+        const walletAddress = ethers.utils.getAddress(ENV.PRIVATE_WALLET);
         
-        // Try to retrieve stored API credentials from MongoDB
-        const PolyMarket = getPolyMarketModel();
-        const existingRecord = await PolyMarket.findOne({ account_adr: walletAddress });
-        
-        let creds: ApiKeyCreds | undefined = undefined;
-        
-        if (existingRecord && existingRecord.clobclient) {
-            try {
-                const clobClientData = JSON.parse(existingRecord.clobclient);
-                if (clobClientData.apiKey && clobClientData.apiSecret) {
-                    creds = {
-                        key: clobClientData.apiKey,
-                        secret: clobClientData.apiSecret,
-                        passphrase: clobClientData.passphrase || '' // Use stored passphrase or empty string
-                    };
-                }
-            } catch (error) {
-                console.warn('Failed to parse stored API credentials, will create new ones');
-            }
-        }
-        
-        // If no credentials found, create or derive them
-        if (!creds || !creds.key) {
-            // Create a temporary ClobClient without credentials to create API keys
-            let tempClobClient = new ClobClient(
-                this.clobRpcUrl,
-                chainId,
-                wallet,
-                undefined,
-                SignatureType.EOA,
-                walletAddress
-            );
-            
-            try {
-                const originalConsoleError = console.error;
-                console.error = function () { };
-                creds = await tempClobClient.createApiKey();
-                console.error = originalConsoleError;
-                
-                if (!creds || !creds.key) {
-                    creds = await tempClobClient.deriveApiKey();
-                }
-            } catch (error) {
-                console.error('Error creating/deriving API key:', error);
-                throw error;
-            }
+        //In general don't create a new API key, always derive or createOrDerive
+        const interim = new ClobClient(this.clobRpcUrl, chainId, wallet);
+        const creds: ApiKeyCreds = await interim.createOrDeriveApiKey();
+        if (!creds) {
+            throw new Error("Failed to get API creds");
         }
         
         // Create ClobClient with credentials

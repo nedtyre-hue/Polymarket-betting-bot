@@ -12,10 +12,6 @@ const tradeExecutor = async (data: TradeData, params: TradeParams) => {
 
     const side = data.side ? Side.SELL : Side.BUY;
 
-    if (side === Side.SELL) {
-        return;
-    }
-
     const tokenID = data.tokenId;
     let price = data.side
         ? data.takerAmount / data.makerAmount
@@ -54,8 +50,6 @@ const tradeExecutor = async (data: TradeData, params: TradeParams) => {
 
     const executeOrder = async (price: number, size: number, timeout: number): Promise<boolean> => {
         try {
-            // Generate a nonce for the order (using timestamp)
-            const nonce = Date.now();
             
             const response = await clobService.placeOrder(
                 tokenID,
@@ -63,7 +57,7 @@ const tradeExecutor = async (data: TradeData, params: TradeParams) => {
                 side, // Side.BUY or Side.SELL (string enum)
                 size,
                 0, // feeRateBps - can be adjusted if needed
-                nonce
+                0
             );
             logger.info('Order response:', response);
 
