@@ -75,7 +75,7 @@ const tradeExecutor = async (data: TradeData, params: TradeParams) => {
                 return false;
             }
 
-            await new Promise((resolve) => setTimeout(resolve, timeout * 1000));
+            await new Promise((resolve) => setTimeout(resolve, timeout * 1500));
             const orderStatus = await clobService.getOrder(response.orderID);
             if (orderStatus.original_size === orderStatus.size_matched) {
                 logger.info('Order completed successfully 🎉:', response.orderID);
