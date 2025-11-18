@@ -1,5 +1,6 @@
 import { createLogger, format, transports, Logger } from 'winston';
 import path from 'path';
+import { NODE_ENV } from '@/config/constants';
 
 // Custom level filter
 const levelFilter = (level: string) =>
@@ -30,7 +31,7 @@ const logFormat = format.printf((info) => {
   if (info.stack && info.level === 'error') {
     const location = extractLocation(typeof info.stack === 'string' ? info.stack : undefined);
     return `${base} ${location} ${info.message}`;
-  } else if (info.level === 'info' || info.level === 'warn') {
+  } else if (info.level === 'info') {
     return `${base} ${info.message}${splatData}`;
   }
 
@@ -44,7 +45,7 @@ const logger: Logger = createLogger({
     logFormat
   ),
   transports: [
-    new transports.Console(),
+    ...(NODE_ENV === 'development' ? [new transports.Console()] : []),
 
     // Info.log: only info and warn
     new transports.File({

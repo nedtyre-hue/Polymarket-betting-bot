@@ -1,76 +1,57 @@
-import readline from 'readline';
-import connectDB from './config/db';
-import ora from 'ora';
-import TradeMonitor from './services/tradeMonitor';
-import tradeExecutor from './services/tradeExecutor';
-import { TradeParams } from './interfaces/tradeInterfaces';
-import { approveUSDC, checkUSDCAllowance } from './utils/helper';
-import { ENV } from './config/env';
+import express from 'express';
+import cors from 'cors';
+import path from 'path';
+import cookieParser from 'cookie-parser';
+import logger from '@/utils/logger';
+import { CORS_ALLOWED_ORIGINS, SERVER_PORT } from '@/config/constants';
+import { connectDatabase } from '@/config/database';
+import routes from '@/routes';
 
-const promptUser = async (): Promise<TradeParams> => {
-    const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout,
-    });
+const app = express();
 
-    console.log(
-        'hey, I’m going to go into monitor mode for a few days, what parameters should I use the whole time I’m running?'
-    );
+app.use(cookieParser());
 
-    const question = (query: string): Promise<string> =>
-        new Promise((resolve) => rl.question(query, resolve));
+// Middleware to parse JSON
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-    const targetWallet = await question('Enter target wallet address: ');
-    const copyRatio = parseInt(
-        await question('Enter your wanted ratio (fraction): '),
-        10
-    );
-
-    const retryLimit = parseInt(await question('Enter retry limit: '), 10);
-
-    const orderTimeout = parseInt(
-        await question('Enter order timeout (in seconds): '),
-        10
-    );
-    const orderIncrement = parseInt(
-        await question('Enter order increment (in cents): '),
-        10
-    );
-
-    rl.close();
-
-    return {
-        targetWallet,
-        copyRatio,
-        retryLimit,
-        orderIncrement,
-        orderTimeout,
-    };
+// CORS configuration (restrict to specific domains for production)
+const corsOptions = {
+  origin: CORS_ALLOWED_ORIGINS,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true,
+  maxAge: 86400,
 };
 
-export const main = async () => {
-    // await test();
-    const connectDBSpinner = ora('Connecting DB...').start();
-    await connectDB();
-    connectDBSpinner.succeed('Connected to MongoDB.\n');
+app.use(cors(corsOptions));
 
-    const params = await promptUser();
+// API routes
+app.use('/api', routes);
 
-    console.log('Checking USDC allowance for CLOB contracts...')
-    for (const contractAddress of ENV.CLOB_CONTRACT_ADDRESSES) {
-        const allowance = await checkUSDCAllowance(ENV.PRIVATE_WALLET, contractAddress);
-        if (allowance === 0) {
-            const txHash = await approveUSDC(ENV.PRIVATE_KEY, contractAddress, 'max');
-        }
+// Serve frontend
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Redirect all routes to frontend (SPA support)
+app.get(/.*/, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Initialize database and start server
+async function initializeServer() {
+    try {
+        // Connect to database
+        await connectDatabase();
+        logger.info('Database connected successfully');
+        
+        // Start server
+        app.listen(SERVER_PORT, () => {
+          logger.info(`Server is running at http://localhost:${SERVER_PORT}`);
+        });
+    } catch (error) {
+        logger.error('Failed to initialize server:', error);
+        process.exit(1);
     }
+}
 
-    const botStartSpinner = ora('Starting the bot...').start();
-    const monitor = new TradeMonitor();
-    monitor.on('transaction', (data) => {
-        tradeExecutor(data, params);
-    });
-    monitor.start(params.targetWallet);
-    botStartSpinner.succeed('Bot started\n');
-};
-
-main();
+// Start the server
+initializeServer();
