@@ -3,6 +3,7 @@ import Joi from 'joi';
 export * from './authSchema';
 export * from './userSchema';
 export * from './settingsSchema';
+export * from './botSchema';
 
 /**
  * Global

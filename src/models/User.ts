@@ -47,6 +47,8 @@ const userSchema = new Schema<IUserDocument>(
   },
   {
     timestamps: true,
+    toJSON: { getters: true },
+    toObject: { getters: true } 
   }
 );
 

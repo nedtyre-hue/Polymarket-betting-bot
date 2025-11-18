@@ -64,8 +64,10 @@ export const getAllUsers = async (req: Request, res: Response) => {
     return res.status(200).json({
       success: true,
       message: 'Users fetched successfully',
-      data: result.data,
-      pagination: result.pagination,
+      data: {
+        users: result.data,
+        pagination: result.pagination,
+      }
     });
   } catch (error: any) {
     logger.error('Error fetching users:', error);

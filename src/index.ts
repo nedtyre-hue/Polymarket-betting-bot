@@ -18,7 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 // CORS configuration (restrict to specific domains for production)
 const corsOptions = {
   origin: CORS_ALLOWED_ORIGINS,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   credentials: true,
   maxAge: 86400,
 };

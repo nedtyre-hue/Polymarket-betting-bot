@@ -2,6 +2,7 @@ import { Router } from 'express';
 import authRoutes from './authRoutes';
 import userRoutes from './userRoutes';
 import settingsRoutes from './settingsRoutes';
+import botRoutes from './botRoutes';
 import { isAuthenticated } from '@/middlewares/auth';
 
 const router = Router();
@@ -13,7 +14,10 @@ router.use('/auth', authRoutes);
 router.use('/users', isAuthenticated, userRoutes);
 
 // Settings routes
-router.use('/settings', settingsRoutes);
+router.use('/settings', isAuthenticated, settingsRoutes);
+
+// Bot routes
+router.use('/bots', isAuthenticated, botRoutes);
 
 // Health check route
 router.get('/health', (req, res) => {
