@@ -103,10 +103,10 @@ export interface ISettingsAttributes {
   retryLimit: number;
   timeout: number;
   increment: number;
-  minBetValue: number;
-  maxBetValue: number;
+  minBetSize: number;
+  maxBetSize: number;
   betSizeStrategy: BetSizeStrategy;
-  fixedAmount?: number;
+  fixedSize?: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -124,10 +124,10 @@ export interface IBotSettings {
   retryLimit: number;
   timeout: number;
   increment: number;
-  minBetValue: number;
-  maxBetValue: number;
+  minBetSize: number;
+  maxBetSize: number;
   betSizeStrategy: BetSizeStrategy;
-  fixedAmount?: number;
+  fixedSize?: number;
 }
 
 export interface IBotAttributes {
@@ -140,6 +140,7 @@ export interface IBotAttributes {
   wallet: string;
   privateKey: string; // Encrypted
   status: BotStatus;
+  errorMessage?: string | null;
   settings: IBotSettings;
   createdAt?: Date;
   updatedAt?: Date;
@@ -153,3 +154,75 @@ export interface IBotPaginationOptions extends IPaginationOptions {
 }
 
 export type { UserAllowStatus } from '@enums';
+
+/**
+ * Trade types
+ */
+export interface TradeData {
+  blockNumber: number;
+  transactionHash: string;
+  tokenId: string;
+  side: number;
+  makerAmount: number;
+  takerAmount: number;
+}
+
+export interface TradeParams {
+  targetWallet: string;
+  copyRatio: number;
+  retryLimit: number;
+  orderIncrement: number;
+  orderTimeout: number;
+  betSizeStrategy: 'PERCENTAGE' | 'FIX';
+  fixedSize?: number;
+  minBetSize: number;
+  maxBetSize: number;
+}
+
+/**
+ * Interface for placed order response
+ */
+export interface IPlacedOrderResponse {
+  success: boolean;
+  orderID: string;
+  [key: string]: any;
+}
+
+/**
+ * Interface for canceled orders response
+ */
+export interface ICanceledOrders {
+  canceled: string[];
+  [key: string]: any;
+}
+
+/**
+ * Order History types
+ */
+export type OrderStatus = 'PENDING' | 'SUCCESS' | 'FAILED' | 'PARTIAL';
+
+export interface IOrderHistoryAttributes {
+  id?: string;
+  _id?: Types.ObjectId;
+  botId: Types.ObjectId | string;
+  userId: Types.ObjectId | string;
+  status: OrderStatus;
+  transactionHash: string;
+  blockNumber: number;
+  tokenId: string;
+  side: 'BUY' | 'SELL';
+  originalMakerAmount: string;
+  originalTakerAmount: string;
+  orderId?: string | null;
+  executedPrice?: number | null;
+  executedSize?: number | null;
+  errorMessage?: string | null;
+  errorCode?: string | null;
+  attemptCount: number;
+  executedAt?: Date | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export type IOrderHistoryCreationAttributes = Omit<IOrderHistoryAttributes, 'id' | '_id' | 'createdAt' | 'updatedAt'>;
+export type IOrderHistoryDocument = IOrderHistoryAttributes & Document<Types.ObjectId>;

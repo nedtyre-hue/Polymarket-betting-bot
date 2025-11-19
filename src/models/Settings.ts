@@ -37,13 +37,13 @@ const settingsSchema = new Schema(
       min: 1,
       default: 1,
     },
-    minBetValue: {
+    minBetSize: {
       type: Number,
       required: true,
       min: 5,
       default: 5,
     },
-    maxBetValue: {
+    maxBetSize: {
       type: Number,
       required: true,
       min: 0,
@@ -55,7 +55,7 @@ const settingsSchema = new Schema(
       required: true,
       default: 'PERCENTAGE',
     },
-    fixedAmount: {
+    fixedSize: {
       type: Number,
       required: false,
       min: 0,

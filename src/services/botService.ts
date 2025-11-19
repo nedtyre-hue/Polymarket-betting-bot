@@ -8,6 +8,7 @@ import {
   BotStatus,
 } from '@/types';
 import { encrypt, decrypt } from '@/utils/encryption';
+import botManager from './botManager';
 
 /**
  * Bot Service
@@ -101,7 +102,12 @@ class BotService {
     };
 
     const bot = new Bot(normalizedData);
-    return bot.save();
+    const savedBot = await bot.save();
+    
+    // Notify botManager about the new bot
+    await botManager.handleBotCreated(savedBot);
+    
+    return savedBot;
   }
 
   /**
@@ -119,11 +125,18 @@ class BotService {
       updateData.privateKey = encrypt(updateData.privateKey);
     }
 
-    return Bot.findOneAndUpdate(
+    const updatedBot = await Bot.findOneAndUpdate(
       { _id: botId, userId },
       updateData,
       { new: true, runValidators: true }
     ).exec();
+    
+    // Notify botManager about the bot update
+    if (updatedBot) {
+      await botManager.handleBotUpdated(updatedBot);
+    }
+    
+    return updatedBot;
   }
 
   /**
@@ -134,11 +147,18 @@ class BotService {
     botId: string,
     status: BotStatus
   ): Promise<IBotDocument | null> {
-    return Bot.findOneAndUpdate(
+    const updatedBot = await Bot.findOneAndUpdate(
       { _id: botId, userId },
       { status },
       { new: true, runValidators: true }
     ).exec();
+    
+    // Notify botManager about the status change
+    if (updatedBot) {
+      await botManager.handleBotUpdated(updatedBot);
+    }
+    
+    return updatedBot;
   }
 
   /**
@@ -146,7 +166,14 @@ class BotService {
    */
   async deleteBot(userId: string, botId: string): Promise<boolean> {
     const result = await Bot.findOneAndDelete({ _id: botId, userId }).exec();
-    return Boolean(result);
+    const deleted = Boolean(result);
+    
+    // Notify botManager about the bot deletion
+    if (deleted) {
+      botManager.handleBotDeleted(botId);
+    }
+    
+    return deleted;
   }
 
   /**

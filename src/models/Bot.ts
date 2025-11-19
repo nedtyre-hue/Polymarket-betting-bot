@@ -43,6 +43,12 @@ const botSchema = new Schema(
       default: 'STOPPED',
       uppercase: true,
     },
+    errorMessage: {
+      type: String,
+      required: false,
+      default: null,
+      trim: true,
+    },
     settings: {
       ratio: {
         type: Number,
@@ -71,13 +77,13 @@ const botSchema = new Schema(
         min: 1,
         default: 1,
       },
-      minBetValue: {
+      minBetSize: {
         type: Number,
         required: true,
         min: 5,
         default: 5,
       },
-      maxBetValue: {
+      maxBetSize: {
         type: Number,
         required: true,
         min: 0,
@@ -89,7 +95,7 @@ const botSchema = new Schema(
         required: true,
         default: 'PERCENTAGE',
       },
-      fixedAmount: {
+      fixedSize: {
         type: Number,
         required: false,
         min: 0,

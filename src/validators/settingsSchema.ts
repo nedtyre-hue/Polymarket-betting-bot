@@ -52,28 +52,28 @@ export const settingsSchema = Joi.object({
       'any.required': 'Increment is required',
     }),
   
-  minBetValue: Joi.number()
+  minBetSize: Joi.number()
     .min(5)
     .required()
     .messages({
-      'number.base': 'Minimum bet value must be a number',
-      'number.min': 'Minimum bet value must be at least 5',
-      'any.required': 'Minimum bet value is required',
+      'number.base': 'Minimum bet size must be a number',
+      'number.min': 'Minimum bet size must be at least 5',
+      'any.required': 'Minimum bet size is required',
     }),
   
-  maxBetValue: Joi.number()
+  maxBetSize: Joi.number()
     .min(0)
     .required()
     .messages({
-      'number.base': 'Maximum bet value must be a number',
-      'number.min': 'Maximum bet value must be 0 or greater',
-      'any.required': 'Maximum bet value is required',
+      'number.base': 'Maximum bet size must be a number',
+      'number.min': 'Maximum bet size must be 0 or greater',
+      'any.required': 'Maximum bet size is required',
     })
     .custom((value, helpers) => {
-      const minBetValue = helpers.state.ancestors[0]?.minBetValue;
-      if (minBetValue !== undefined && value < minBetValue) {
+      const minBetSize = helpers.state.ancestors[0]?.minBetSize;
+      if (minBetSize !== undefined && value < minBetSize) {
         return helpers.error('any.custom', {
-          message: 'Maximum bet value must be greater than or equal to minimum bet value',
+          message: 'Maximum bet size must be greater than or equal to minimum bet size',
         });
       }
       return value;
@@ -88,19 +88,19 @@ export const settingsSchema = Joi.object({
       'any.required': 'Bet size strategy is required',
     }),
   
-  fixedAmount: Joi.number()
+  fixedSize: Joi.number()
     .min(0)
     .optional()
     .when('betSizeStrategy', {
       is: 'FIX',
       then: Joi.required().messages({
-        'any.required': 'Fixed amount is required when bet size strategy is FIX',
+        'any.required': 'Fixed size is required when bet size strategy is FIX',
       }),
       otherwise: Joi.optional(),
     })
     .messages({
-      'number.base': 'Fixed amount must be a number',
-      'number.min': 'Fixed amount must be 0 or greater',
+      'number.base': 'Fixed size must be a number',
+      'number.min': 'Fixed size must be 0 or greater',
     }),
 });
 

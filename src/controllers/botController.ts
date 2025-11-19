@@ -110,10 +110,10 @@ export const createBot = async (req: Request, res: Response) => {
           retryLimit: defaultSettings.retryLimit,
           timeout: defaultSettings.timeout,
           increment: defaultSettings.increment,
-          minBetValue: defaultSettings.minBetValue,
-          maxBetValue: defaultSettings.maxBetValue,
+          minBetSize: defaultSettings.minBetSize,
+          maxBetSize: defaultSettings.maxBetSize,
           betSizeStrategy: defaultSettings.betSizeStrategy,
-          fixedAmount: defaultSettings.fixedAmount,
+          fixedSize: defaultSettings.fixedSize,
         };
       } else {
         // Use hardcoded defaults
@@ -122,10 +122,10 @@ export const createBot = async (req: Request, res: Response) => {
           retryLimit: 3,
           timeout: 30,
           increment: 1,
-          minBetValue: 5,
-          maxBetValue: 1000,
+          minBetSize: 5,
+          maxBetSize: 1000,
           betSizeStrategy: 'PERCENTAGE',
-          fixedAmount: 10,
+          fixedSize: 10,
         };
       }
     }
