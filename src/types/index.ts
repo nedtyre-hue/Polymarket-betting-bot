@@ -26,6 +26,8 @@ export interface IPaginationOptions {
   search?: string;
   sortBy?: string;
   sortOrder?: 'ASC' | 'DESC';
+  status?: string;
+  side?: string;
 }
 
 export interface IPaginatedResponse<T> {

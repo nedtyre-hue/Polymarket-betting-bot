@@ -235,3 +235,18 @@ export const updateBotStatusSchema = Joi.object({
     }),
 });
 
+/**
+ * Validation schema for bot details query parameters
+ */
+export const getBotDetailsSchema = Joi.object({
+  page: Joi.number().integer().min(1).optional().default(1),
+  limit: Joi.number().integer().min(1).max(100).optional().default(50),
+  sortBy: Joi.string().optional().default('createdAt'),
+  sortOrder: Joi.string().valid('ASC', 'DESC').optional().default('DESC'),
+  // Filters
+  status: Joi.string().valid('PENDING', 'SUCCESS', 'FAILED', 'PARTIAL').optional(),
+  side: Joi.string().valid('BUY', 'SELL').optional(),
+  // Search
+  search: Joi.string().trim().optional().allow('').max(255),
+});
+

@@ -8,6 +8,7 @@ import {
   fetchBotsSchema,
   botIdSchema,
   updateBotStatusSchema,
+  getBotDetailsSchema,
 } from '@/validators';
 
 const router = Router();
@@ -22,6 +23,19 @@ router.get(
   isAuthenticated,
   validate(fetchBotsSchema, 'query'),
   botController.getBots
+);
+
+/**
+ * @route   GET /api/bots/:id/details
+ * @desc    Get bot details with order history
+ * @access  Private
+ */
+router.get(
+  '/:id/details',
+  isAuthenticated,
+  validate(botIdSchema, 'params'),
+  validate(getBotDetailsSchema, 'query'),
+  botController.getBotDetails
 );
 
 /**

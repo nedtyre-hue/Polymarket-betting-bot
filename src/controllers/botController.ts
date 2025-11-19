@@ -1,12 +1,14 @@
 import { Request, Response } from 'express';
 import botService from '@/services/botService';
 import settingsService from '@/services/settingsService';
+import orderHistoryService from '@/services/orderHistoryService';
 import logger from '@/utils/logger';
 import CustomError from '@/utils/customError';
 import {
   IBotCreationAttributes,
   IBotPaginationOptions,
   BotStatus,
+  IPaginationOptions,
 } from '@/types';
 
 /**
@@ -251,6 +253,67 @@ export const deleteBot = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     logger.error('Error deleting bot:', error);
+    res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/**
+ * Get bot details with order history
+ */
+export const getBotDetails = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.id;
+
+    if (!userId) {
+      throw new CustomError('User not authenticated', 401);
+    }
+
+    const { id } = req.params;
+    const validatedQuery = (req as any).validatedQuery || req.query;
+
+    // Get bot
+    const bot = await botService.getBotById(userId, id);
+
+    if (!bot) {
+      throw new CustomError('Bot not found', 404);
+    }
+
+    // Get order history options
+    const orderHistoryOptions: IPaginationOptions = {
+      page: Number(validatedQuery.page) || 1,
+      limit: Number(validatedQuery.limit) || 50,
+      sortBy: (validatedQuery.sortBy as string) || 'createdAt',
+      sortOrder: (validatedQuery.sortOrder as 'ASC' | 'DESC') || 'DESC',
+      status: validatedQuery.status as string | undefined,
+      side: validatedQuery.side as string | undefined,
+      search: (validatedQuery.search as string) || undefined,
+    };
+
+    // Get order history and stats
+    const [orderHistory, stats] = await Promise.all([
+      orderHistoryService.getOrderHistoryByBotId(userId, id, orderHistoryOptions),
+      orderHistoryService.getOrderHistoryStats(userId, id),
+    ]);
+
+    // Don't expose the private key
+    const botResponse = bot.toObject();
+    delete (botResponse as any).privateKey;
+
+    return res.status(200).json({
+      success: true,
+      message: 'Bot details fetched successfully',
+      data: {
+        bot: botResponse,
+        orderHistory: orderHistory.data,
+        orderHistoryPagination: orderHistory.pagination,
+        orderStats: stats,
+      },
+    });
+  } catch (error: any) {
+    logger.error('Error fetching bot details:', error);
     res.status(error.statusCode || 500).json({
       success: false,
       message: error.message,
