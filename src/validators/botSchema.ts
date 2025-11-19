@@ -125,6 +125,14 @@ export const createBotSchema = Joi.object({
       'any.required': 'Copy trading wallet is required',
     }),
   
+  copyTradingWalletContractAddress: Joi.string()
+    .trim()
+    .required()
+    .messages({
+      'string.empty': 'Copy trading wallet contract address is required',
+      'any.required': 'Copy trading wallet contract address is required',
+    }),
+  
   wallet: Joi.string()
     .trim()
     .required()
@@ -163,6 +171,13 @@ export const updateBotSchema = Joi.object({
     .optional()
     .messages({
       'string.empty': 'Copy trading wallet cannot be empty',
+    }),
+  
+  copyTradingWalletContractAddress: Joi.string()
+    .trim()
+    .optional()
+    .messages({
+      'string.empty': 'Copy trading wallet contract address cannot be empty',
     }),
   
   wallet: Joi.string()

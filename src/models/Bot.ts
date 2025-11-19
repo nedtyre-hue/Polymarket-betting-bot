@@ -21,6 +21,11 @@ const botSchema = new Schema(
       required: true,
       trim: true,
     },
+    copyTradingWalletContractAddress: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     wallet: {
       type: String,
       required: true,

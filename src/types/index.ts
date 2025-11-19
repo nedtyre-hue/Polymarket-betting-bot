@@ -136,6 +136,7 @@ export interface IBotAttributes {
   userId: Types.ObjectId | string;
   name: string;
   copyTradingWallet: string;
+  copyTradingWalletContractAddress: string;
   wallet: string;
   privateKey: string; // Encrypted
   status: BotStatus;
