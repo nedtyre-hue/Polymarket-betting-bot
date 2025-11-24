@@ -158,7 +158,7 @@ const tradeExecutor = async (
                 }
 
                 if (!response || !response.success) {
-                    const errorMsg = 'Order posting failed';
+                    const errorMsg = response.error || 'Order posting failed';
                     orderHistory.status = 'FAILED';
                     orderHistory.errorMessage = errorMsg;
                     orderHistory.errorCode = 'ORDER_POST_FAILED';

@@ -1,146 +1,106 @@
-import { ethers } from 'ethers';
-import { ApiKeyCreds, ApiKeysResponse, ClobClient, OpenOrder, OpenOrdersResponse, OrderScoring, OrderType } from '@polymarket/clob-client';
-import { ICanceledOrders, IPlacedOrderResponse } from '@/types';
-import { RPC_URL } from '@/config/constants';
-import { SignatureType } from '@polymarket/order-utils';
+// npm i @polymarket/clob-client @polymarket/order-utils ethers
+import { ethers } from "ethers";
+import {
+  ApiKeyCreds,
+  ClobClient,
+  OpenOrder,
+  OpenOrdersResponse,
+  OrderScoring,
+  OrderType,
+} from "@polymarket/clob-client";
+import { IPlacedOrderResponse } from "@/types/index";
+import { SignatureType } from "@polymarket/order-utils";
 
 class ClobService {
-    private clobClient: ClobClient | null = null;
-    private clobRpcUrl: string;
-    private privateKey: string;
+  private clobClient: ClobClient | null = null;
+  private clobRpcUrl: string;
+  private privateKey: string;      // MetaMask private key (EOA)
+  private proxyWalletAddress: string; // Polymarket proxy wallet (funder)
+  private chainId = 137; // Polygon
 
-    constructor(clobRpcUrl: string, privateKey: string) {
-        this.clobRpcUrl = clobRpcUrl;
-        this.privateKey = privateKey;
-    }
+  constructor(clobRpcUrl: string, privateKey: string, proxyWalletAddress: string) {
+    this.clobRpcUrl = clobRpcUrl;
+    this.privateKey = privateKey;
+    this.proxyWalletAddress = proxyWalletAddress;
+  }
 
-    private async getClobClient(): Promise<ClobClient> {
-        if (this.clobClient) {
-            return this.clobClient;
-        }
+  private async getClobClient(): Promise<ClobClient> {
+    if (this.clobClient) return this.clobClient;
 
-        // Create a provider from the RPC URL
-        const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
-        // Create wallet and connect it to the provider
-        const wallet = new ethers.Wallet(this.privateKey, provider);
-        const chainId = await wallet.getChainId();
-        
-        // Get wallet address from the private key
-        const walletAddress = ethers.utils.getAddress(wallet.address);
-        
-        //In general don't create a new API key, always derive or createOrDerive
-        const interim = new ClobClient(this.clobRpcUrl, chainId, wallet);
-        const creds: ApiKeyCreds = await interim.createOrDeriveApiKey();
-        if (!creds) {
-            throw new Error("Failed to get API creds");
-        }
-        
-        // Create ClobClient with credentials
-        this.clobClient = new ClobClient(
-            this.clobRpcUrl,
-            chainId,
-            wallet,
-            creds,
-            SignatureType.EOA,
-            walletAddress
-        );
+    // NOTE: use your RPC URL (Polygon RPC)
+    const provider = new ethers.providers.JsonRpcProvider(this.clobRpcUrl);
+    const signer = new ethers.Wallet(this.privateKey, provider);
 
-        return this.clobClient;
-    }
+    // Derive/create API key pair (the client helper will sign this request with signer)
+    const interim = new ClobClient(this.clobRpcUrl, this.chainId, signer);
+    const creds: ApiKeyCreds = await interim.createOrDeriveApiKey();
+    if (!creds) throw new Error("Failed to create/derive API creds");
 
-    async createApiKey(): Promise<ApiKeyCreds> {
-        const clobClient = await this.getClobClient();
-        const creds = await clobClient.createApiKey();
-        return creds;
-    }
+    // Create the real client:
+    // - signer: your EOA (MetaMask private key)
+    // - signatureType: POLY_PROXY so the client will sign proxy-style orders
+    // - funder: your POLY proxy wallet address (where USDC must be)
+    this.clobClient = new ClobClient(
+      this.clobRpcUrl,
+      this.chainId,
+      signer,
+      creds,
+      SignatureType.POLY_PROXY,
+      this.proxyWalletAddress
+    );
 
-    async getApiKey(): Promise<ApiKeysResponse> {
-        const clobClient = await this.getClobClient();
-        const creds = await clobClient.getApiKeys();
-        return creds;
-    }
+    return this.clobClient;
+  }
 
-    async deleteApiKey(): Promise<string> {
-        const clobClient = await this.getClobClient();
-        const resp = await clobClient.deleteApiKey();
-        return resp;
-    }
+  async placeOrder(
+    tokenID: string,
+    price: number,
+    side: "BUY" | "SELL",
+    size: number,
+    feeRateBps = 0,
+    nonce = 0
+  ): Promise<IPlacedOrderResponse> {
+    const clobClient = await this.getClobClient();
 
-    async placeOrder(
-        tokenID: string,
-        price: number,
-        side: string,
-        size: number,
-        feeRateBps: number,
-        nonce: number
-    ): Promise<IPlacedOrderResponse> {
-        try {
-            const clobClient = await this.getClobClient();
-            const order = await clobClient.createOrder({
-                tokenID,
-                price,
-                side: side as any,
-                size,
-                feeRateBps,
-                nonce
-            });
-            const resp = await clobClient.postOrder(order, OrderType.GTC);
-            return resp;
-        } catch (error) {
-            throw error;
-        }
-    }
+    // createOrder returns the proper Order object (client handles EIP712/hash/signing strategy)
+    const order = await clobClient.createOrder({
+      tokenID,
+      price,
+      side: side as any,
+      size,
+      feeRateBps,
+      nonce
+    });
 
-    async getOrder(orderID: string): Promise<OpenOrder> {
-        try {
-            const clobClient = await this.getClobClient();
-            const order = await clobClient.getOrder(orderID);
-            return order;
-        } catch (error: any) {
-            throw error;
-        }
-    }
+    // post the order; the client will attach the correct L2 headers and signature
+    const resp = await clobClient.postOrder(order, OrderType.GTC);
+    return resp as IPlacedOrderResponse;
+  }
 
-    async isOrderScoring(orderID: string): Promise<OrderScoring> {
-        try {
-            const clobClient = await this.getClobClient();
-            const scoring = await clobClient.isOrderScoring({ order_id: orderID });
-            return scoring;
-        } catch (error: any) {
-            throw error;
-        }
-    }
+  async getOrder(orderID: string): Promise<OpenOrder> {
+    const clobClient = await this.getClobClient();
+    return await clobClient.getOrder(orderID);
+  }
 
-    async getActiveOrders(market: string): Promise<OpenOrdersResponse> {
-        try {
-            const clobClient = await this.getClobClient();
-            const orders = await clobClient.getOpenOrders({ market });
-            return orders;
-        } catch (error: any) {
-            throw error;
-        }
-    }
+  async isOrderScoring(orderID: string): Promise<OrderScoring> {
+    const clobClient = await this.getClobClient();
+    return await clobClient.isOrderScoring({ order_id: orderID });
+  }
 
-    async cancelOrder(orderID: string): Promise<string> {
-        try {
-            const clobClient = await this.getClobClient();
-            const resp = await clobClient.cancelOrder({ orderID });
-            return resp;
-        } catch (error: any) {
-            throw error;
-        }
-    }
+  async getActiveOrders(market: string): Promise<OpenOrdersResponse> {
+    const clobClient = await this.getClobClient();
+    return await clobClient.getOpenOrders({ market });
+  }
 
-    async cancelAllOrders(): Promise<ICanceledOrders> {
-        try {
-            const clobClient = await this.getClobClient();
-            const resp = await clobClient.cancelAll();
-            return resp;
-        } catch (error: any) {
-            throw error;
-        }
-    }
+  async cancelOrder(orderID: string): Promise<string> {
+    const clobClient = await this.getClobClient();
+    return await clobClient.cancelOrder({ orderID });
+  }
+
+  async cancelAllOrders() {
+    const clobClient = await this.getClobClient();
+    return await clobClient.cancelAll();
+  }
 }
 
 export default ClobService;
-

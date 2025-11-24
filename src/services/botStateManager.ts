@@ -47,14 +47,9 @@ class BotStateManager {
       const { RPC_URL } = await import('@/config/constants');
       const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
       const walletFromKey = new ethers.Wallet(privateKey, provider);
-      const addressFromKey = walletFromKey.address.toLowerCase();
-      
-      if (addressFromKey !== bot.wallet.toLowerCase()) {
-        throw new Error(`Wallet address mismatch for bot ${botId}. Expected ${bot.wallet}, got ${addressFromKey}`);
-      }
 
       // Create ClobService for this bot
-      const clobService = new ClobService(CLOB_HTTP_URL, privateKey);
+      const clobService = new ClobService(CLOB_HTTP_URL, privateKey, bot.wallet.toLowerCase());
 
       // Create bot config
       const config: BotConfig = {

@@ -191,23 +191,6 @@ class BotManager extends EventEmitter {
         return { valid: false, error: 'Invalid private key format' };
       }
 
-      // 6. Verify wallet address matches private key
-      try {
-        const { RPC_URL } = await import('@/config/constants');
-        const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
-        const walletFromKey = new ethers.Wallet(privateKey, provider);
-        const addressFromKey = walletFromKey.address.toLowerCase();
-        
-        if (addressFromKey !== bot.wallet.toLowerCase()) {
-          return { 
-            valid: false, 
-            error: `Wallet address mismatch. Expected ${bot.wallet}, but private key corresponds to ${addressFromKey}` 
-          };
-        }
-      } catch (error: any) {
-        return { valid: false, error: `Failed to verify wallet from private key: ${error.message}` };
-      }
-
       return { valid: true };
     } catch (error: any) {
       return { valid: false, error: `Validation error: ${error.message}` };
