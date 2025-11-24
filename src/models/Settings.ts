@@ -29,7 +29,7 @@ const settingsSchema = new Schema(
       required: true,
       min: 1,
       max: 3600,
-      default: 30,
+      default: 1,
     },
     increment: {
       type: Number,
