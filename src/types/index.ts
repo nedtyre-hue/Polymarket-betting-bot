@@ -107,6 +107,9 @@ export interface ISettingsAttributes {
   increment: number;
   minBetSize: number;
   maxBetSize: number;
+  maxBuySize?: number | null;
+  maxSellSize?: number | null;
+  dumpRemainingSharesOnPartialSell?: boolean;
   betSizeStrategy: BetSizeStrategy;
   fixedSize?: number;
   createdAt?: Date;
@@ -128,6 +131,9 @@ export interface IBotSettings {
   increment: number;
   minBetSize: number;
   maxBetSize: number;
+  maxBuySize?: number | null;
+  maxSellSize?: number | null;
+  dumpRemainingSharesOnPartialSell?: boolean;
   betSizeStrategy: BetSizeStrategy;
   fixedSize?: number;
 }
@@ -179,6 +185,9 @@ export interface TradeParams {
   fixedSize?: number;
   minBetSize: number;
   maxBetSize: number;
+  maxBuySize?: number | null;
+  maxSellSize?: number | null;
+  dumpRemainingSharesOnPartialSell?: boolean;
 }
 
 /**

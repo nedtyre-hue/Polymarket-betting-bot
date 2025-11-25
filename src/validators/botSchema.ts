@@ -79,6 +79,51 @@ const botSettingsSchema = Joi.object({
       return value;
     }),
   
+  maxBuySize: Joi.number()
+    .min(0)
+    .allow(null)
+    .optional()
+    .messages({
+      'number.base': 'Maximum buy size must be a number',
+      'number.min': 'Maximum buy size must be 0 or greater',
+    })
+    .custom((value, helpers) => {
+      if (value === null || value === undefined) return value;
+      const minBetSize = helpers.state.ancestors[0]?.settings?.minBetSize;
+      if (minBetSize !== undefined && value < minBetSize) {
+        return helpers.error('any.custom', {
+          message: 'Maximum buy size must be greater than or equal to minimum bet size',
+        });
+      }
+      return value;
+    }),
+  
+  maxSellSize: Joi.number()
+    .min(0)
+    .allow(null)
+    .optional()
+    .messages({
+      'number.base': 'Maximum sell size must be a number',
+      'number.min': 'Maximum sell size must be 0 or greater',
+    })
+    .custom((value, helpers) => {
+      if (value === null || value === undefined) return value;
+      const minBetSize = helpers.state.ancestors[0]?.settings?.minBetSize;
+      if (minBetSize !== undefined && value < minBetSize) {
+        return helpers.error('any.custom', {
+          message: 'Maximum sell size must be greater than or equal to minimum bet size',
+        });
+      }
+      return value;
+    }),
+  
+  dumpRemainingSharesOnPartialSell: Joi.boolean()
+    .optional()
+    .default(false)
+    .messages({
+      'boolean.base': 'Dump remaining shares on partial sell must be a boolean',
+    }),
+  
   betSizeStrategy: Joi.string()
     .valid('PERCENTAGE', 'FIX')
     .required()

@@ -49,6 +49,23 @@ const settingsSchema = new Schema(
       min: 0,
       default: 1000,
     },
+    maxBuySize: {
+      type: Number,
+      required: false,
+      min: 0,
+      default: null,
+    },
+    maxSellSize: {
+      type: Number,
+      required: false,
+      min: 0,
+      default: null,
+    },
+    dumpRemainingSharesOnPartialSell: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
     betSizeStrategy: {
       type: String,
       enum: ['PERCENTAGE', 'FIX'],

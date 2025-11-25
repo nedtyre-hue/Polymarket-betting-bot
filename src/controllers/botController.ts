@@ -114,6 +114,9 @@ export const createBot = async (req: Request, res: Response) => {
           increment: defaultSettings.increment,
           minBetSize: defaultSettings.minBetSize,
           maxBetSize: defaultSettings.maxBetSize,
+          maxBuySize: defaultSettings.maxBuySize ?? null,
+          maxSellSize: defaultSettings.maxSellSize ?? null,
+          dumpRemainingSharesOnPartialSell: defaultSettings.dumpRemainingSharesOnPartialSell ?? false,
           betSizeStrategy: defaultSettings.betSizeStrategy,
           fixedSize: defaultSettings.fixedSize,
         };
@@ -126,6 +129,9 @@ export const createBot = async (req: Request, res: Response) => {
           increment: 1,
           minBetSize: 5,
           maxBetSize: 1000,
+          maxBuySize: null,
+          maxSellSize: null,
+          dumpRemainingSharesOnPartialSell: false,
           betSizeStrategy: 'PERCENTAGE',
           fixedSize: 10,
         };

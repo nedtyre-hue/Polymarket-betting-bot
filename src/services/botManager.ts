@@ -109,6 +109,9 @@ class BotManager extends EventEmitter {
       fixedSize: settings.fixedSize,
       minBetSize: settings.minBetSize,
       maxBetSize: settings.maxBetSize,
+      maxBuySize: settings.maxBuySize ?? null,
+      maxSellSize: settings.maxSellSize ?? null,
+      dumpRemainingSharesOnPartialSell: settings.dumpRemainingSharesOnPartialSell ?? false,
     };
 
     // Execute trade with bot-specific configuration

@@ -86,13 +86,18 @@ const tradeExecutor = async (
         }
 
         // Apply maximum bet size constraint (user-defined maximum)
-        if (size > params.maxBetSize) {
-            logger.warn(`[Bot ${botId}] Size ${size} exceeds maximum ${params.maxBetSize}, capping to maximum`);
-            size = params.maxBetSize;
+        // Use side-specific limits if available, otherwise fall back to maxBetSize
+        const maxSize = side === Side.BUY 
+            ? (params.maxBuySize ?? params.maxBetSize)
+            : (params.maxSellSize ?? params.maxBetSize);
+        
+        if (maxSize !== null && maxSize !== undefined && size > maxSize) {
+            logger.warn(`[Bot ${botId}] Size ${size} exceeds maximum ${maxSize} (${side === Side.BUY ? 'BUY' : 'SELL'}), capping to maximum`);
+            size = maxSize;
             
             // Check if capped size still meets minimum order value
             if (size * price < minOrderValue) {
-                const errorMsg = `Cannot meet minimum order value ${minOrderValue} with max bet size ${params.maxBetSize} at price ${price}`;
+                const errorMsg = `Cannot meet minimum order value ${minOrderValue} with max ${side === Side.BUY ? 'buy' : 'sell'} size ${maxSize} at price ${price}`;
                 logger.error(`[Bot ${botId}] ❌ ${errorMsg}`);
                 throw new Error(errorMsg);
             }
@@ -183,9 +188,63 @@ const tradeExecutor = async (
                     return true;
                 }
 
-                // Partially filled - cancel and mark as partial
+                // Partially filled - handle based on side and settings
+                const filledSize = Number(orderStatus.size_matched);
+                const remainingSize = Number(orderStatus.original_size ?? 0) - filledSize;
+                
+                logger.info(`[Bot ${botId}] Order partially filled: ${filledSize}/${orderStatus.original_size}, remaining: ${remainingSize}`);
+                
+                // Cancel the remaining order
                 await new Promise((resolve) => setTimeout(resolve, timeout * 1000));
                 await clobService.cancelOrder(response.orderID);
+                
+                // If it's a SELL and dumpRemainingSharesOnPartialSell is enabled, dump remaining shares at market price
+                if (side === Side.SELL && params.dumpRemainingSharesOnPartialSell && remainingSize > 0) {
+                    try {
+                        logger.info(`[Bot ${botId}] Dumping remaining ${remainingSize} shares at market price...`);
+                        
+                        // Calculate the remaining shares based on the % of the copied sell
+                        // The remainingSize is already the remaining portion of our order
+                        // We need to ensure it meets minimum order value
+                        const minOrderValue = 1;
+                        const marketPrice = price - 0.01; // Very aggressive price for market sell (1 cent)
+                        
+                        if (remainingSize * marketPrice >= minOrderValue) {
+                            // Place market sell order at very aggressive price (0.01)
+                            const marketSellResponse = await clobService.placeOrder(
+                                tokenID,
+                                marketPrice,
+                                Side.SELL,
+                                remainingSize,
+                                0, // feeRateBps
+                                0  // nonce
+                            );
+                            
+                            if (marketSellResponse && marketSellResponse.success && marketSellResponse.orderID) {
+                                logger.info(`[Bot ${botId}] ✅ Market dump order placed: ${marketSellResponse.orderID} for ${remainingSize} shares at ${marketPrice}`);
+                                
+                                // Wait a bit and check if it filled
+                                await new Promise((resolve) => setTimeout(resolve, timeout * 1500));
+                                const dumpOrderStatus = await clobService.getOrder(marketSellResponse.orderID);
+                                
+                                if (dumpOrderStatus.original_size === dumpOrderStatus.size_matched) {
+                                    logger.info(`[Bot ${botId}] ✅ Market dump order fully filled`);
+                                } else {
+                                    // Cancel if not fully filled
+                                    await clobService.cancelOrder(marketSellResponse.orderID);
+                                    logger.warn(`[Bot ${botId}] ⚠️ Market dump order partially filled, canceled remaining`);
+                                }
+                            } else {
+                                logger.warn(`[Bot ${botId}] ⚠️ Failed to place market dump order: ${marketSellResponse?.error || 'Unknown error'}`);
+                            }
+                        } else {
+                            logger.warn(`[Bot ${botId}] ⚠️ Remaining size ${remainingSize} too small for market dump (min order value: ${minOrderValue})`);
+                        }
+                    } catch (dumpError: any) {
+                        logger.error(`[Bot ${botId}] ❌ Error during market dump:`, dumpError);
+                        // Don't fail the whole trade if dump fails
+                    }
+                }
                 
                 orderHistory.status = 'PARTIAL';
                 orderHistory.executedAt = new Date();
