@@ -298,10 +298,15 @@ export const getBotDetails = async (req: Request, res: Response) => {
       search: (validatedQuery.search as string) || undefined,
     };
 
+    // Get timeframe for stats (optional, in hours)
+    const timeframeHours = validatedQuery.timeframeHours
+      ? Number(validatedQuery.timeframeHours)
+      : undefined;
+
     // Get order history and stats
     const [orderHistory, stats] = await Promise.all([
       orderHistoryService.getOrderHistoryByBotId(userId, id, orderHistoryOptions),
-      orderHistoryService.getOrderHistoryStats(userId, id),
+      orderHistoryService.getOrderHistoryStats(userId, id, timeframeHours),
     ]);
 
     // Don't expose the private key

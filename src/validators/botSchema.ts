@@ -293,5 +293,7 @@ export const getBotDetailsSchema = Joi.object({
   side: Joi.string().valid('BUY', 'SELL').optional(),
   // Search
   search: Joi.string().trim().optional().allow('').max(255),
+  // Timeframe for stats (in hours, 0 or undefined means all time)
+  timeframeHours: Joi.number().integer().min(0).max(1000).optional(),
 });
 
