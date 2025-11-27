@@ -237,3 +237,25 @@ export interface IOrderHistoryAttributes {
 
 export type IOrderHistoryCreationAttributes = Omit<IOrderHistoryAttributes, 'id' | '_id' | 'createdAt' | 'updatedAt'>;
 export type IOrderHistoryDocument = IOrderHistoryAttributes & Document<Types.ObjectId>;
+
+/**
+ * Strategy Settings types
+ */
+export interface IStrategySettingsAttributes {
+  id?: string;
+  _id?: Types.ObjectId;
+  userId: Types.ObjectId | string;
+  marketSelection: 'BTC' | 'ETH' | 'SOL' | 'XRP';
+  triggerPrice: number; // in cents (0-100)
+  tradeType: 'MARKET' | 'LIMIT';
+  limitPrice?: number | null; // in cents (0-100), required when tradeType is LIMIT
+  timeout: number;
+  increment: number;
+  fixedSize: number;
+  retryLimit: number;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export type IStrategySettingsCreationAttributes = Omit<IStrategySettingsAttributes, 'id' | '_id' | 'createdAt' | 'updatedAt'>;
+export type IStrategySettingsDocument = IStrategySettingsAttributes & Document<Types.ObjectId>;

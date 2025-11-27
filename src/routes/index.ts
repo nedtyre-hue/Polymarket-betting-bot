@@ -3,6 +3,7 @@ import authRoutes from './authRoutes';
 import userRoutes from './userRoutes';
 import settingsRoutes from './settingsRoutes';
 import botRoutes from './botRoutes';
+import strategySettingsRoutes from './odds-strategy/strategySettingsRoutes';
 import { isAuthenticated } from '@/middlewares/auth';
 
 const router = Router();
@@ -18,6 +19,9 @@ router.use('/settings', isAuthenticated, settingsRoutes);
 
 // Bot routes
 router.use('/bots', isAuthenticated, botRoutes);
+
+// Strategy Settings routes
+router.use('/strategy-settings', isAuthenticated, strategySettingsRoutes);
 
 // Health check route
 router.get('/health', (req, res) => {
