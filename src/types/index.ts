@@ -123,6 +123,7 @@ export type ISettingsDocument = ISettingsAttributes & Document<Types.ObjectId>;
  * Bot types
  */
 export type BotStatus = 'STOPPED' | 'RUNNING' | 'ERROR';
+export type BotType = 'COPY' | 'ODDS_STRATEGY';
 
 export interface IBotSettings {
   ratio: number;
@@ -136,6 +137,17 @@ export interface IBotSettings {
   dumpRemainingSharesOnPartialSell?: boolean;
   betSizeStrategy: BetSizeStrategy;
   fixedSize?: number;
+}
+
+export interface IOddsStrategySettings {
+  marketSelection: 'BTC' | 'ETH' | 'SOL' | 'XRP';
+  triggerPrice: number; // in cents (0-100)
+  tradeType: 'MARKET' | 'LIMIT';
+  limitPrice?: number | null; // in cents (0-100)
+  timeout: number;
+  increment: number;
+  fixedSize: number;
+  retryLimit: number;
 }
 
 export interface IBotAttributes {
@@ -259,3 +271,27 @@ export interface IStrategySettingsAttributes {
 
 export type IStrategySettingsCreationAttributes = Omit<IStrategySettingsAttributes, 'id' | '_id' | 'createdAt' | 'updatedAt'>;
 export type IStrategySettingsDocument = IStrategySettingsAttributes & Document<Types.ObjectId>;
+
+/**
+ * Strategy Bot types
+ */
+export interface IStrategyBotAttributes {
+  id?: string;
+  _id?: Types.ObjectId;
+  userId: Types.ObjectId | string;
+  name: string;
+  wallet: string;
+  privateKey: string; // Encrypted
+  status: BotStatus;
+  errorMessage?: string | null;
+  oddsStrategySettings: IOddsStrategySettings;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export type IStrategyBotCreationAttributes = Omit<IStrategyBotAttributes, 'id' | '_id' | 'createdAt' | 'updatedAt'>;
+export type IStrategyBotDocument = IStrategyBotAttributes & Document<Types.ObjectId>;
+
+export interface IStrategyBotPaginationOptions extends IPaginationOptions {
+  status?: BotStatus;
+}
