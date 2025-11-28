@@ -245,8 +245,8 @@ class CentralizedMarketMonitor extends EventEmitter {
       const msg = JSON.parse(raw);
       const eventType = msg.event_type;
 
-      // Monitor for price_change events
-      if (eventType === "price_change") {
+      // Monitor for last_trade_price events
+      if (eventType === "last_trade_price") {
         this.handlePriceChange(msg);
       }
     } catch (error) {
@@ -258,60 +258,53 @@ class CentralizedMarketMonitor extends EventEmitter {
   }
 
   /**
-   * Handle price_change event from WebSocket
-   * Format: { event_type: "price_change", price_changes: [{ asset_id, price, ... }] }
+   * Handle last_trade_price event from WebSocket
+   * Format: { event_type: "last_trade_price", asset_id, price, side, ... }
    */
   private handlePriceChange(msg: any): void {
     try {
-      // Check if message has price_changes array
-      if (!msg.price_changes || !Array.isArray(msg.price_changes)) {
+      // Extract fields directly from message (last_trade_price is a single object, not an array)
+      const tokenId = msg.asset_id;
+      const priceStr = msg.price;
+      const side = msg.side;
+
+      if (side === "SELL") return;
+
+      if (!tokenId || !priceStr) {
         return;
       }
 
-      // Process each price change in the array
-      for (const priceChange of msg.price_changes) {
-        const tokenId = priceChange.asset_id;
-        const priceStr = priceChange.price;
-        const side = priceChange.side;
+      // Price from WebSocket is already in decimal format (0-1)
+      const price = parseFloat(priceStr);
 
-        if (side === "SELL") continue;
+      // Update last price for this token (store in decimal format)
+      this.lastPrices.set(tokenId, price);
 
-        if (!tokenId || !priceStr) {
-          continue;
+      // Find which market this token belongs to and determine if it's UP or DOWN
+      let marketSelection: "BTC" | "ETH" | "SOL" | "XRP" | null = null;
+      let marketType: "UP" | "DOWN" | null = null;
+
+      for (const [market, marketData] of Object.entries(this.marketTokenIds)) {
+        if (marketData.upTokenId === tokenId) {
+          marketSelection = market as "BTC" | "ETH" | "SOL" | "XRP";
+          marketType = "UP";
+          break;
+        } else if (marketData.downTokenId === tokenId) {
+          marketSelection = market as "BTC" | "ETH" | "SOL" | "XRP";
+          marketType = "DOWN";
+          break;
         }
-
-        // Price from WebSocket is already in decimal format (0-1)
-        const price = parseFloat(priceStr);
-
-        // Update last price for this token (store in decimal format)
-        this.lastPrices.set(tokenId, price);
-
-        // Find which market this token belongs to and determine if it's UP or DOWN
-        let marketSelection: "BTC" | "ETH" | "SOL" | "XRP" | null = null;
-        let marketType: "UP" | "DOWN" | null = null;
-
-        for (const [market, marketData] of Object.entries(this.marketTokenIds)) {
-          if (marketData.upTokenId === tokenId) {
-            marketSelection = market as "BTC" | "ETH" | "SOL" | "XRP";
-            marketType = "UP";
-            break;
-          } else if (marketData.downTokenId === tokenId) {
-            marketSelection = market as "BTC" | "ETH" | "SOL" | "XRP";
-            marketType = "DOWN";
-            break;
-          }
-        }
-
-        if (!marketSelection || !marketType) {
-          logger.info(`Token ${tokenId} not found in any market`);
-          continue;
-        }
-
-        // logger.info(`Price change: ${marketSelection} ${marketType} token = ${price} cents`);
-
-        // Check all active bots for this market
-        this.checkAndExecuteBots(marketSelection, "BUY", tokenId, price);
       }
+
+      if (!marketSelection || !marketType) {
+        logger.info(`Token ${tokenId} not found in any market`);
+        return;
+      }
+
+      // logger.info(`Price change: ${marketSelection} ${marketType} token = ${price} cents`);
+
+      // Check all active bots for this market
+      this.checkAndExecuteBots(marketSelection, "BUY", tokenId, price);
     } catch (error) {
       logger.error("Error handling price change:", error);
     }
@@ -339,11 +332,11 @@ class CentralizedMarketMonitor extends EventEmitter {
       const triggerPriceDecimal = config.settings.triggerPrice / 100;
       
       // Check if trigger price is reached
-      if (price <= triggerPriceDecimal) {
+      if ((triggerPriceDecimal - 0.025) <= price && price <= (triggerPriceDecimal + 0.025)) {
         // Set trigger flag BEFORE executing order to prevent multiple triggers
         config.hasTriggered = true;
         logger.info(
-          `[StrategyBot ${config.botId}] 🎯 Trigger price reached! ${side} token at ${price} (trigger: ${triggerPriceDecimal})`
+          `[StrategyBot ${config.botId}] ${marketSelection} 🎯 Trigger price reached! ${side} token at ${price} (trigger: ${triggerPriceDecimal})`
         );
 
         // Execute buy order (don't await - let them run in parallel)
