@@ -176,7 +176,7 @@ export const checkWalletStatus = async (privateKey?: string, walletAddress?: str
 const POLYGON_USDC_NATIVE = '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359'; // Native USDC
 const POLYGON_USDC_BRIDGED = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174'; // USDC.e (bridged)
 
-const getMyBalance = async (address: string, showDetails: boolean = false): Promise<number> => {
+export const getMyBalance = async (address: string, showDetails: boolean = false): Promise<number> => {
     // Validate address format to ensure it's not an ENS name
     if (!ethers.utils.isAddress(address)) {
         throw new Error(`Invalid address format: ${address}. Must be a valid Ethereum address (0x...).`);
@@ -246,4 +246,21 @@ export const checkAllUSDCBalances = async (address: string): Promise<{ native: n
     }
 };
 
-export default getMyBalance;
+// Helper function to detect Cloudflare blocks
+export const isCloudflareBlock = (response: any): boolean => {
+    if (!response) return false;
+    
+    if (response.error && typeof response.error === 'string') {
+        const errorStr = response.error.toLowerCase();
+        return errorStr.includes('cloudflare') || 
+               errorStr.includes('attention required') ||
+               errorStr.includes('sorry, you have been blocked') ||
+               errorStr.includes('<!doctype html>');
+    }
+    
+    if (typeof response === 'string' && response.toLowerCase().includes('cloudflare')) {
+        return true;
+    }
+    
+    return false;
+};

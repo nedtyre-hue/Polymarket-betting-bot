@@ -1,11 +1,11 @@
 import { Schema, model } from 'mongoose';
-import { IOrderHistoryDocument } from '@/types';
+import { IStrategyOrderHistoryDocument } from '@/types';
 
-const orderHistorySchema = new Schema(
+const strategyOrderHistorySchema = new Schema(
   {
     botId: {
       type: Schema.Types.ObjectId,
-      ref: 'Bot',
+      ref: 'StrategyBot',
       required: true,
     },
     userId: {
@@ -20,14 +20,17 @@ const orderHistorySchema = new Schema(
       default: 'PENDING',
       uppercase: true,
     },
-    // Trade data from blockchain
+    // Trade data
+    // For strategy bots, these may not be available since orders are placed directly on CLOB
     transactionHash: {
       type: String,
-      required: true,
+      required: false,
+      default: null,
     },
     blockNumber: {
       type: Number,
-      required: true,
+      required: false,
+      default: 0,
     },
     tokenId: {
       type: String,
@@ -88,12 +91,12 @@ const orderHistorySchema = new Schema(
 );
 
 // Indexes for efficient queries
-orderHistorySchema.index({ botId: 1, createdAt: -1 });
-orderHistorySchema.index({ userId: 1, createdAt: -1 });
-orderHistorySchema.index({ status: 1, createdAt: -1 });
-orderHistorySchema.index({ transactionHash: 1 });
+strategyOrderHistorySchema.index({ botId: 1, createdAt: -1 });
+strategyOrderHistorySchema.index({ userId: 1, createdAt: -1 });
+strategyOrderHistorySchema.index({ status: 1, createdAt: -1 });
+strategyOrderHistorySchema.index({ transactionHash: 1 });
 
-const OrderHistory = model<IOrderHistoryDocument>('OrderHistory', orderHistorySchema);
+const StrategyOrderHistory = model<IStrategyOrderHistoryDocument>('StrategyOrderHistory', strategyOrderHistorySchema);
 
-export default OrderHistory;
+export default StrategyOrderHistory;
 

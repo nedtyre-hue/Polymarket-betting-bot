@@ -8,7 +8,7 @@ import {
   BotStatus,
 } from '@/types';
 import { encrypt, decrypt } from '@/utils/encryption';
-import botManager from '../botManager';
+import strategyBotManager from './strategyBotManager';
 
 /**
  * Strategy Bot Service
@@ -107,9 +107,8 @@ class StrategyBotService {
     const bot = new StrategyBot(normalizedData);
     await bot.save();
 
-    // Initialize bot in bot manager (if needed for strategy bots)
-    // Note: Strategy bots may have different lifecycle management
-    // await botManager.handleBotCreated(bot);
+    // Initialize bot in strategy bot manager
+    await strategyBotManager.handleStrategyBotCreated(bot);
 
     return bot;
   }
@@ -137,8 +136,8 @@ class StrategyBotService {
     Object.assign(bot, updateData);
     await bot.save();
 
-    // Update bot in bot manager (if needed for strategy bots)
-    // await botManager.handleBotUpdated(bot);
+    // Update bot in strategy bot manager
+    await strategyBotManager.handleStrategyBotUpdated(bot);
 
     return bot;
   }
@@ -146,15 +145,17 @@ class StrategyBotService {
   /**
    * Delete a strategy bot
    */
-  async deleteStrategyBot(userId: string, botId: string): Promise<boolean> {
-    const bot = await StrategyBot.findOne({ _id: botId, userId }).exec();
+  async deleteStrategyBot(userId: string, strategyBotId: string): Promise<boolean> {
+    const bot = await StrategyBot.findOne({ _id: strategyBotId, userId }).exec();
 
     if (!bot) {
       return false;
     }
 
-    // Remove bot from bot manager (if needed for strategy bots)
-    // botManager.handleBotDeleted(botId);
+    const botId = bot._id.toString();
+
+    // Remove bot from strategy bot manager
+    strategyBotManager.handleStrategyBotDeleted(botId);
 
     // Delete bot
     await StrategyBot.deleteOne({ _id: botId }).exec();
@@ -179,8 +180,8 @@ class StrategyBotService {
     bot.status = status;
     await bot.save();
 
-    // Update bot in bot manager (if needed for strategy bots)
-    // await botManager.handleBotUpdated(bot);
+    // Update bot in strategy bot manager
+    await strategyBotManager.handleStrategyBotUpdated(bot);
 
     return bot;
   }

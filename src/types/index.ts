@@ -251,6 +251,36 @@ export type IOrderHistoryCreationAttributes = Omit<IOrderHistoryAttributes, 'id'
 export type IOrderHistoryDocument = IOrderHistoryAttributes & Document<Types.ObjectId>;
 
 /**
+ * Strategy Order History types
+ */
+export interface IStrategyOrderHistoryAttributes {
+  id?: string;
+  _id?: Types.ObjectId;
+  botId: Types.ObjectId | string;
+  userId: Types.ObjectId | string;
+  status: OrderStatus;
+  // For strategy bots, these may not be available since orders are placed directly on CLOB
+  transactionHash?: string | null;
+  blockNumber?: number | null;
+  tokenId: string;
+  side: 'BUY' | 'SELL';
+  originalMakerAmount: string;
+  originalTakerAmount: string;
+  orderId?: string | null;
+  executedPrice?: number | null;
+  executedSize?: number | null;
+  errorMessage?: string | null;
+  errorCode?: string | null;
+  attemptCount: number;
+  executedAt?: Date | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export type IStrategyOrderHistoryCreationAttributes = Omit<IStrategyOrderHistoryAttributes, 'id' | '_id' | 'createdAt' | 'updatedAt'>;
+export type IStrategyOrderHistoryDocument = IStrategyOrderHistoryAttributes & Document<Types.ObjectId>;
+
+/**
  * Strategy Settings types
  */
 export interface IStrategySettingsAttributes {

@@ -8,7 +8,6 @@ const settingsSchema = new Schema(
       ref: 'User',
       required: true,
       unique: true,
-      index: true,
     },
     ratio: {
       type: Number,

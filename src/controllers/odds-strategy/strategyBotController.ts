@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import strategyBotService from '@/services/odds-strategy/strategyBotService';
-import orderHistoryService from '@/services/orderHistoryService';
+import strategyOrderHistoryService from '@/services/odds-strategy/strategyOrderHistoryService';
 import logger from '@/utils/logger';
 import CustomError from '@/utils/customError';
 import {
@@ -121,8 +121,8 @@ export const getStrategyBotDetails = async (req: Request, res: Response) => {
     };
 
     const [orderHistoryResult, orderStats] = await Promise.all([
-      orderHistoryService.getOrderHistoryByBotId(userId, bot._id.toString(), orderHistoryOptions),
-      orderHistoryService.getOrderHistoryStats(userId, bot._id.toString(), validatedQuery.timeframeHours ? Number(validatedQuery.timeframeHours) : undefined),
+      strategyOrderHistoryService.getOrderHistoryByBotId(userId, bot._id.toString(), orderHistoryOptions),
+      strategyOrderHistoryService.getOrderHistoryStats(userId, bot._id.toString(), validatedQuery.timeframeHours ? Number(validatedQuery.timeframeHours) : undefined),
     ]);
 
     // Don't expose the private key

@@ -14,7 +14,6 @@ const userSchema = new Schema<IUserDocument>(
       lowercase: true,
       trim: true,
       maxlength: 255,
-      index: true,
     },
     password: {
       type: String,

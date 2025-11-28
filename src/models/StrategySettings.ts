@@ -8,7 +8,6 @@ const strategySettingsSchema = new Schema(
       ref: 'User',
       required: true,
       unique: true,
-      index: true,
     },
     marketSelection: {
       type: String,

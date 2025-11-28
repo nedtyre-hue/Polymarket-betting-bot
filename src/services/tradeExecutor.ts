@@ -3,6 +3,7 @@ import { TradeData, TradeParams } from '@/types';
 import logger from '@/utils/logger';
 import ClobService from './clobService';
 import OrderHistory from '@/models/OrderHistory';
+import { isCloudflareBlock } from '@/utils/helper';
 
 /**
  * Execute a trade for a specific bot
@@ -104,25 +105,6 @@ const tradeExecutor = async (
         }
 
         logger.info(`[Bot ${botId}] side: ${side}, tokenID: ${tokenID}, price: ${price}, size: ${size}`);
-
-        // Helper function to detect Cloudflare blocks
-        const isCloudflareBlock = (response: any): boolean => {
-            if (!response) return false;
-            
-            if (response.error && typeof response.error === 'string') {
-                const errorStr = response.error.toLowerCase();
-                return errorStr.includes('cloudflare') || 
-                       errorStr.includes('attention required') ||
-                       errorStr.includes('sorry, you have been blocked') ||
-                       errorStr.includes('<!doctype html>');
-            }
-            
-            if (typeof response === 'string' && response.toLowerCase().includes('cloudflare')) {
-                return true;
-            }
-            
-            return false;
-        };
 
         const executeOrder = async (price: number, size: number, timeout: number, attempt: number): Promise<boolean> => {
             try {

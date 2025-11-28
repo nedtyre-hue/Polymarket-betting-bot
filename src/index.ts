@@ -7,6 +7,7 @@ import { CORS_ALLOWED_ORIGINS, SERVER_PORT } from '@/config/constants';
 import { connectDatabase } from '@/config/database';
 import routes from '@/routes';
 import botManager from '@/services/botManager';
+import strategyBotManager from '@/services/odds-strategy/strategyBotManager';
 
 const app = express();
 
@@ -47,10 +48,14 @@ async function initializeServer() {
         // Initialize bot manager (loads and starts all RUNNING bots)
         await botManager.initialize();
         
+        // Initialize strategy bot manager (loads and starts all RUNNING strategy bots)
+        await strategyBotManager.initialize();
+        
         // Start server
         app.listen(SERVER_PORT, () => {
           logger.info(`Server is running at http://localhost:${SERVER_PORT}`);
           logger.info('🤖 Bot Manager is active and monitoring RUNNING bots');
+          logger.info('🎯 Strategy Bot Manager is active and monitoring RUNNING strategy bots');
         });
     } catch (error) {
         logger.error('Failed to initialize server:', error);
@@ -62,12 +67,14 @@ async function initializeServer() {
 process.on('SIGTERM', async () => {
     logger.info('SIGTERM received, shutting down gracefully...');
     await botManager.shutdown();
+    await strategyBotManager.shutdown();
     process.exit(0);
 });
 
 process.on('SIGINT', async () => {
     logger.info('SIGINT received, shutting down gracefully...');
     await botManager.shutdown();
+    await strategyBotManager.shutdown();
     process.exit(0);
 });
 
