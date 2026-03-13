@@ -49,7 +49,7 @@ async function initializeServer() {
         await botManager.initialize();
         
         // Initialize strategy bot manager (loads and starts all RUNNING strategy bots)
-        await strategyBotManager.initialize();
+        // await strategyBotManager.initialize();
         
         // Start server
         app.listen(SERVER_PORT, () => {
