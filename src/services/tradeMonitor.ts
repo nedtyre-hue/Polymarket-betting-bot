@@ -163,8 +163,6 @@ class TradeMonitor extends EventEmitter {
                             continue;
                         }
 
-                        if (tx.hash !== "0xc1d4aad28e1750e4ee2a45daef5bc850186a83441559934a5bf339413b13fd4d") continue;
-
                         let takerOrderData;
                         try {
                             if (to === "0xe3f18acc55091e2c48d883fc8c8413319d4ab7b0"){
