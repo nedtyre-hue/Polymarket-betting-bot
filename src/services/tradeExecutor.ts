@@ -117,7 +117,7 @@ const tradeExecutor = async (
                     price,
                     side,
                     size,
-                    0, // feeRateBps
+                    1000, // feeRateBps (market requires 1000; 0 is rejected)
                     0  // nonce
                 );
                 
@@ -198,7 +198,7 @@ const tradeExecutor = async (
                                 marketPrice,
                                 Side.SELL,
                                 remainingSize,
-                                0, // feeRateBps
+                                1000, // feeRateBps (market requires 1000; 0 is rejected)
                                 0  // nonce
                             );
                             

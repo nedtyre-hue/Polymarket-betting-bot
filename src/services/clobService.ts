@@ -57,7 +57,7 @@ class ClobService {
     price: number,
     side: "BUY" | "SELL",
     size: number,
-    feeRateBps = 0,
+    feeRateBps = 1000, // Polymarket requires 1000; 0 is rejected
     nonce = 0
   ): Promise<IPlacedOrderResponse> {
     const clobClient = await this.getClobClient();
