@@ -138,7 +138,7 @@ class TradeMonitor extends EventEmitter {
                     let currentContractAddresses = botStateManager.getContractAddresses();
                     const currentTargetWallets = botStateManager.getTargetWallets();
 
-                    currentContractAddresses.push("0xe3f18acc55091e2c48d883fc8c8413319d4ab7b0".toLowerCase());
+                    // currentContractAddresses.push("0xe3f18acc55091e2c48d883fc8c8413319d4ab7b0".toLowerCase());
                     // currentContractAddresses.push("0xd1ebe815f921b3ebbd8d9e0a4192c6ab18360f5c".toLowerCase());
                     // currentContractAddresses.push("0xd216153c06e857cd7f72665e0af1d7d82172f494");
 
