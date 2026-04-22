@@ -53,7 +53,7 @@ const botSettingsSchema = Joi.object({
     }),
   
   minBetSize: Joi.number()
-    .min(5)
+    .min(0.1)
     .required()
     .messages({
       'number.base': 'Minimum bet size must be a number',

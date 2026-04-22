@@ -39,7 +39,7 @@ const settingsSchema = new Schema(
     minBetSize: {
       type: Number,
       required: true,
-      min: 5,
+      min: 0.1,
       default: 5,
     },
     maxBetSize: {
